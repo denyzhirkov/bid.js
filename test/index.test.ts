@@ -1,7 +1,8 @@
 import 
   Bid,
-  { BidProcess, BidCallback, BidEvent, BidStatus, BidJob, BidProcessJob, Done, Progress, BidConfig }
+  { BidProcess, BidCallback, BidEvent, BidStatus, BidJob, BidProcessJob, Done, Progress, BidConfig, BidError }
 from '../src';
+import 'jest-extended';
 
 const wait = async (t = 200) => {
   return new Promise((resolve) => {
@@ -100,7 +101,7 @@ test('Bid should execute "error" event', async () => {
   expect(pass).toBeCalledTimes(1);
 });
 
-test('Bid should execute all events in flow', async () => {
+test('Bid should execute all events in normal flow', async () => {
   const proc: BidProcess = async (job: BidProcessJob, progress: Progress, done: Done) => {
     if (job.payload === 'error') {
       await done('fake error');
@@ -109,23 +110,43 @@ test('Bid should execute all events in flow', async () => {
     }
   };
   
-  const pass = jest.fn();
-  // const passStart = jest.fn();
-  // const passFinish = jest.fn();
-  // const passError = jest.fn();
-  // const passEnd = jest.fn();
+  const passStart = jest.fn();
+  const passFinish = jest.fn();
+  const passEnd = jest.fn();
 
-  testBid.on('start', pass);
-  testBid.on('finish', pass);
-  testBid.on('error', pass);
-  testBid.on('end', pass);
+  testBid.on('start', passStart);
+  testBid.on('finish', passFinish);
+  testBid.on('end', passEnd);
 
   testBid.setProcess(proc);
   testBid.add(1);
+  await wait();
+  expect(passStart).toHaveBeenCalledBefore(passFinish);
+  expect(passFinish).toHaveBeenCalledBefore(passEnd);
+});
+
+test('Bid should execute all events in error flow', async () => {
+  const proc: BidProcess = async (job: BidProcessJob, progress: Progress, done: Done) => {
+    if (job.payload === 'error') {
+      await done('fake error');
+    } else {
+      await done();
+    }
+  };
+  
+  const passStart = jest.fn();
+  const passError = jest.fn();
+  const passEnd = jest.fn();
+
+  testBid.on('start', passStart);
+  testBid.on('error', passError);
+  testBid.on('end', passEnd);
+
+  testBid.setProcess(proc);
   testBid.add('error');
   await wait();
-  // expect(passStart).toHaveBeenCalledBefore(passFinish);
-  expect(pass).toBeCalledTimes(5);
+  expect(passStart).toHaveBeenCalledBefore(passError);
+  expect(passError).toHaveBeenCalledBefore(passEnd);
 });
 
 test('Bid should increase amount of jobs', async () => {
@@ -185,4 +206,10 @@ test('Bid should enumerate job if config allow', async () => {
 
   testBid.add({"some": "payload"});
 
+});
+
+test('Bid should throw if no process', async () => {
+  expect(() => {
+    testBid.add({"some": "payload"});
+  }).toThrow(BidError.NO_PROCESS);
 });
