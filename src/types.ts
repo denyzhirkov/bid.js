@@ -4,10 +4,13 @@ export enum BidStatus {
   WORKING = 'WORKING',
 }
 
+export enum BidError {
+  NO_PROCESS = 'The "process" must be set up before running',
+}
+
 export type BidConfig = {
   enumerate?: boolean;
-  onAdd?: (payload: any, name?: string) => Promise<void>;
-  next?: () => Promise<BidJob | null>;
+  process?: BidProcess;
 };
 
 export type BidJob = {
