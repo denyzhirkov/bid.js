@@ -10,19 +10,10 @@ import {
   Done,
   Progress,
   BidConfig,
+  BidError,
 } from './types';
 
-export {
-  BidProcess,
-  BidCallback,
-  BidEvent,
-  BidStatus,
-  BidJob,
-  BidProcessJob,
-  Done,
-  Progress,
-  BidConfig,
-};
+export { BidProcess, BidCallback, BidEvent, BidStatus, BidJob, BidProcessJob, Done, Progress, BidConfig, BidError };
 
 export default class Bid {
   protected events: any = {
@@ -33,7 +24,7 @@ export default class Bid {
   };
   protected config: BidConfig;
   protected enumerate: number = 0;
-  protected process: BidProcess;
+  protected process: BidProcess | undefined;
   protected _status: BidStatus = BidStatus.IDLE;
   protected _jobs: BidJob[] = [];
   protected _timeout: NodeJS.Timeout | null = null;
@@ -51,6 +42,7 @@ export default class Bid {
       ...defaultConfig,
       ...config,
     };
+    this.process = this.config.process;
   }
 
   protected setProgress = (job: BidJob): Progress => {
@@ -118,6 +110,9 @@ export default class Bid {
             payload: job.payload,
             created: job.created,
           };
+          if (!this.process) {
+            throw BidError.NO_PROCESS;
+          }
           this.process(processJob, progress, done);
         } catch (error) {
           if (this.events.error) {
@@ -143,6 +138,9 @@ export default class Bid {
   };
 
   add = (payload: any, name?: string): Bid => {
+    if (!this.process) {
+      throw BidError.NO_PROCESS;
+    }
     const id = this.config.enumerate ? (this.enumerate += 1) : uid();
     const job: BidJob = {
       id,

@@ -10,5 +10,6 @@ export {
   Done,
   Progress,
   BidConfig,
+  BidError,
 } from './bid';
 export default Bid;

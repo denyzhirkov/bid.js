@@ -1,6 +1,6 @@
 {
   "name": "bid.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "In-memory work queue",
   "main": "dist/index.js",
   "devDependencies": {
@@ -20,11 +20,11 @@
     "test": "jest --clearCache && jest",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "prepare" : "npm run build",
-    "prepublishOnly" : "npm test && npm run lint",
-    "preversion" : "npm run lint",
-    "version" : "npm run format && git add -A src",
-    "postversion" : "git push && git push --tags",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags",
     "lint": "tslint -p tsconfig.json"
   },
   "author": "Denis Zhirkov",
